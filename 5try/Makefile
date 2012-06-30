@@ -1,6 +1,7 @@
 CC=g++
 CFLAGS=-c
 LDFLAGS=
+MTRY=2
 TREES=125
 SEED=31120011
 
@@ -30,27 +31,30 @@ workspace/xform_predict: bin/xform
 	bin/xform ~/kglSN_data/train.csv ~/kglSN_data/test.csv $(SEED) 20000 5
 	mv step1_test.csv workspace/
 	mv step1_test_edges.csv workspace/
+	rm -f workspace/rf
 	touch workspace/xform_predict
 
 workspace/xform_test: bin/xform
 	bin/xform ~/kglSN_data/train.csv ~/kglSN_data/test.csv $(SEED) 1000 5
+	rm workspace/rf
 	touch workspace/xform_test
 
 workspace/rf: bin/rf
-	rm -f workspace/oob_predict_*_1_1_$(TREES)
-	rm -f workspace/tst_predict_*_1_1_$(TREES)
-	./bin/rf 2 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_2_1_1_$(TREES) &
-	./bin/rf 3 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_3_1_1_$(TREES) &
-	./bin/rf 4 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_4_1_1_$(TREES) &
-	./bin/rf 5 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_5_1_1_$(TREES) &
-	./bin/rf 6 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_6_1_1_$(TREES) &
-	./bin/rf 7 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_7_1_1_$(TREES) &
-	./bin/rf 8 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_8_1_1_$(TREES) &
-	./bin/rf 9 1 1 $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_9_1_1_$(TREES) 
+	rm -f workspace/oob_predict_*_1_$(MTRY)_$(TREES)
+	rm -f workspace/tst_predict_*_1_$(MTRY)_$(TREES)
+	./bin/rf 2 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_2_1_$(MTRY)_$(TREES) &
+	./bin/rf 3 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_3_1_$(MTRY)_$(TREES) &
+	./bin/rf 4 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_4_1_$(MTRY)_$(TREES) &
+	./bin/rf 5 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_5_1_$(MTRY)_$(TREES) &
+	./bin/rf 6 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_6_1_$(MTRY)_$(TREES) &
+	./bin/rf 7 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_7_1_$(MTRY)_$(TREES) &
+	./bin/rf 8 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_8_1_$(MTRY)_$(TREES) &
+	./bin/rf 9 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_9_1_$(MTRY)_$(TREES) 
+	rm -f workspace/score
 	touch workspace/rf
 
 workspace/score: workspace/rf
-	./merge.pl workspace/ _ _1_1_$(TREES)
+	./merge.pl workspace/ _ _1_$(MTRY)_$(TREES)
 	./score.pl workspace/oob_predict_merge.csv workspace/tst_predict_merge.csv
 	touch workspace/score
 

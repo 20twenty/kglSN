@@ -9,7 +9,7 @@ open(oob_eIN,"<workspace/step1_train_edges.csv") or die "Can't open step1_train_
 open(tstIN,"<$fP_tst") or die "Can't open test predictions file $fP_tst";
 open(tst_eIN,"<workspace/step1_test_edges.csv") or die "Can't open step1_test_edges.csv file";
 open(vIN,"<workspace/step1_validate.csv") or die "Can't open validation file";
-open(testIN,"</home/ubuntu/kglSN_data/test.csv") or die "Can't open /home/ubuntu/kglSN_data/test.csv file";
+open(testIN,"<../../kglSN_data/test.csv") or die "Can't open ../../kglSN_data/test.csv file";
 open(SUBV,">workspace/validate_submit.csv") or die "Can't open workspace/validate_submit.csv";
 open(SUB,">workspace/submit.csv") or die "Can't open workspace/submit.csv";
 

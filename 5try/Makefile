@@ -25,17 +25,17 @@ bin/rf: rf_src/rf.cpp rf_src/xData.cpp rf_src/xData.h rf_src/randomforest.cpp rf
 	$(CC) -I./rf_src rf_src/rf.cpp rf_src/xData.cpp rf_src/randomforest.cpp -o bin/rf
 
 workspace/xform_predict: bin/xform
-	bin/xform ~/kglSN_data/train.csv ~/kglSN_data/test.csv $(SEED) 0 0
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 0 0
 	mv workspace/step1_test.csv .
 	mv workspace/step1_test_edges.csv .
-	bin/xform ~/kglSN_data/train.csv ~/kglSN_data/test.csv $(SEED) 20000 5
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 20000 5
 	mv step1_test.csv workspace/
 	mv step1_test_edges.csv workspace/
 	rm -f workspace/rf
 	touch workspace/xform_predict
 
 workspace/xform_test: bin/xform
-	bin/xform ~/kglSN_data/train.csv ~/kglSN_data/test.csv $(SEED) 1000 5
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 1000 5
 	rm workspace/rf
 	touch workspace/xform_test
 

@@ -58,4 +58,6 @@ workspace/score: workspace/rf
 clean:
 	rm -f workspace/oob_predict*
 	rm -f workspace/tst_predict*
+	rm -f workspace/step1*
+	rm -f workspace/*.csv
 	rm -f log*

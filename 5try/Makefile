@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c
 LDFLAGS=
-MTRY=2
+MTRY=1
 TREES=333
 SEED=31120011
 SUBF = 1
@@ -47,14 +47,6 @@ workspace/rf: bin/rf
 	rm -f workspace/tst_predict_*_1_$(MTRY)_$(TREES)
 	$(foreach var,$(NUMBERS),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
 	./bin/rf 2 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_2_1_$(MTRY)_$(TREES)
-	#./bin/rf 2 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_2_1_$(MTRY)_$(TREES) &
-	#./bin/rf 3 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_3_1_$(MTRY)_$(TREES) &
-	#./bin/rf 4 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_4_1_$(MTRY)_$(TREES) &
-	#./bin/rf 5 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_5_1_$(MTRY)_$(TREES) &
-	#./bin/rf 6 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_6_1_$(MTRY)_$(TREES) &
-	#./bin/rf 7 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_7_1_$(MTRY)_$(TREES) &
-	#./bin/rf 8 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_8_1_$(MTRY)_$(TREES) &
-	#./bin/rf 9 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_9_1_$(MTRY)_$(TREES) 
 	rm -f workspace/score
 	touch workspace/rf
 

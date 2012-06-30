@@ -75,7 +75,7 @@ xData::xData(char* trainFile, char* testFile) {
                   if(rcval<trn_minV[col]) trn_minV[col]=rcval;
                   trn_sumV[col]+=(double)rcval;
                   row_data[col] = rcval;
-                  trn_attr_cf[col].push_back(rcval);
+                  //trn_attr_cf[col].push_back(rcval);
                   col++;
                }
             }
@@ -86,7 +86,7 @@ xData::xData(char* trainFile, char* testFile) {
             trn_sumV.assign(trn_cols,0);
             trn_minV.assign(trn_cols,numeric_limits<double>::max());
             trn_maxV.assign(trn_cols,-numeric_limits<double>::max());
-            trn_attr_cf.assign(trn_cols,vector<double>());
+            //trn_attr_cf.assign(trn_cols,vector<double>());
          } else {
             if(col != trn_cols) {
                cerr << endl << "training data has inconsistent column count" << endl;
@@ -127,7 +127,7 @@ xData::xData(char* trainFile, char* testFile) {
                if(rcval<tst_minV[col]) tst_minV[col]=rcval;
                tst_sumV[col]+=(double)rcval;
                row_data[col] = rcval;
-               tst_attr_cf[col].push_back(rcval);
+               //tst_attr_cf[col].push_back(rcval);
                col++;
             }
          }
@@ -142,7 +142,7 @@ xData::xData(char* trainFile, char* testFile) {
             tst_sumV.assign(trn_cols,0);
             tst_minV.assign(trn_cols,numeric_limits<double>::max());
             tst_maxV.assign(trn_cols,-numeric_limits<double>::max());
-            tst_attr_cf.assign(tst_cols,vector<double>());
+            //tst_attr_cf.assign(tst_cols,vector<double>());
          } else {
             if(col != tst_cols) {
                cerr << endl << "test data has inconsistent column count" << endl;

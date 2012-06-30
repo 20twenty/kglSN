@@ -4,6 +4,9 @@ LDFLAGS=
 MTRY=2
 TREES=333
 SEED=31120011
+SUBF = 1
+NUMBERS = 3 4
+#NUMBERS = 3 4 5 6 7 8 9
 
 test: exe xform_test rf sleep_test score
 predict: exe xform_predict rf sleep_predict score
@@ -42,10 +45,7 @@ workspace/xform_test: bin/xform
 workspace/rf: bin/rf
 	rm -f workspace/oob_predict_*_1_$(MTRY)_$(TREES)
 	rm -f workspace/tst_predict_*_1_$(MTRY)_$(TREES)
-	SUBF = 1
-	NUMBERS = 3 4
-	#NUMBERS = 3 4 5 6 7 8 9
-	$(foreach var,$(NUMBERS),./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &;)
+	$(foreach var,$(NUMBERS),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
 	./bin/rf 2 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_2_1_$(MTRY)_$(TREES)
 	#./bin/rf 2 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_2_1_$(MTRY)_$(TREES) &
 	#./bin/rf 3 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv 1 > log_3_1_$(MTRY)_$(TREES) &

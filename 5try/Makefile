@@ -36,7 +36,7 @@ workspace/xform_predict: bin/xform
 
 workspace/xform_test: bin/xform
 	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 1000 5
-	rm workspace/rf
+	rm -f workspace/rf
 	touch workspace/xform_test
 
 workspace/rf: bin/rf

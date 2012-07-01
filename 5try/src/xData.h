@@ -44,8 +44,10 @@ class xData {
       vector<Node> graph_;
       vector<int> test_;
       map<int,set<int> > validate_;
+      int recGetDepth (int A, vector<int>& myDepth, int depth);
+      void getMissing2(int source, int dest, map<int,map<string,pair<double,int> > >& prAfBrecSum, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth, int maxdepth);
       void getMissing(int id, map<int,EdgeRec>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain);
-      void getMissing2(int source, int dest, map<int,map<string,pair<double,int> > >& prAfBrecSum, map<int,EdgeRec2>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth);
+
       xData(char* trainFile, char* testFile, int seed, int limit_train, int limit_test);
       ~xData();
 

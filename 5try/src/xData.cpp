@@ -73,12 +73,34 @@ bool sort_v_v_d(Voter a, Voter b) {
    return a.overlap > b.overlap;
 }
 
-const int DEPTH = 3;
+const int DEPTH = 4;
 const int LS1 = 1;
 const int LS2 = 2;
 
-void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& prAfBrecSum, map<int,EdgeRec2>& myMissing2, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth) {
-   if (depth == DEPTH || (depth > 0 && A==B)) return;
+int xData::recGetDepth (int A, vector<int>& myDepth, int depth) {
+   if(depth == DEPTH) return 0;
+   myDepth[depth]+=graph_[A].leaders.size() + graph_[A].followers.size();
+   for(set<int>::iterator it_next = graph_[A].leaders.begin(); it_next != graph_[A].leaders.end(); it_next++) {
+         recGetDepth(*it_next, myDepth, depth+1);
+   }
+   for(set<int>::iterator it_next = graph_[A].followers.begin(); it_next != graph_[A].followers.end(); it_next++) {
+         recGetDepth(*it_next, myDepth, depth+1);
+   }
+   if(depth == 0) {
+      int maxdepth = DEPTH;
+      for(int i = 0; i < DEPTH; i++) {
+         if (myDepth[i] > 10000) {
+            maxdepth = i+1;
+            break;
+         }
+      }
+      return maxdepth;
+   }
+   return 0;
+}
+
+void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& prAfBrecSum, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth, int maxdepth) {
+   if (depth == maxdepth || (depth > 0 && A==B)) return;
    
    // traverse leader edges
    {
@@ -98,7 +120,7 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
       }
       //cerr << endl;
       for(set<int>::iterator it_next = graph_[B].leaders.begin(); it_next != graph_[B].leaders.end(); it_next++) {
-         getMissing2(A,*it_next,prAfBrecSum,myMissing2,attrFile,edgeFile,isTrain,newtype,depth+1);
+         getMissing2(A,*it_next,prAfBrecSum,attrFile,edgeFile,isTrain,newtype,depth+1,maxdepth);
       }
    }
    // traverse follower edges
@@ -119,7 +141,7 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
       }
       //cerr << endl;
       for(set<int>::iterator it_next = graph_[B].followers.begin(); it_next != graph_[B].followers.end(); it_next++) {
-         getMissing2(A,*it_next,prAfBrecSum,myMissing2,attrFile,edgeFile,isTrain,newtype,depth+1);
+         getMissing2(A,*it_next,prAfBrecSum,attrFile,edgeFile,isTrain,newtype,depth+1,maxdepth);
       }
    }
    if(depth==0) {
@@ -132,7 +154,7 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
          for(map<string,pair<double,int> >::iterator it_type = (it_rec->second).begin(); it_type != (it_rec->second).end(); it_type++) {
             string type = it_type->first;
             //prAvgSum += (it_type->second).first / ((double)(it_type->second).second * pow(2,(double)type.size()));
-            prAvgSum += (it_type->second).first / (double)prAfBrecSum[-1][type].first;
+            prAvgSum += (it_type->second).first / (double)prAfBrecSum[-1][type].second;
          }
          tmp.push_back(pair<int,double>(rec,prAvgSum));
       }
@@ -151,8 +173,8 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
                if(*it_type == "F") attrFile << "0,0";
                else attrFile << "0";
             } else {
-               if(*it_type == "F") attrFile << graph_[(*it_tmp).first].myLsConnectBack_rate << "," << prAfBrecSum[(*it_tmp).first][*it_type].first;
-               else attrFile << prAfBrecSum[(*it_tmp).first][*it_type].first / (double)prAfBrecSum[-1][*it_type].first;
+               if(*it_type == "F") attrFile << graph_[(*it_tmp).first].myLsConnectBack_rate << ","; // << prAfBrecSum[(*it_tmp).first][*it_type].first;
+               attrFile << prAfBrecSum[(*it_tmp).first][*it_type].first / (double)prAfBrecSum[-1][*it_type].second;
             }
             if(types_count < types_.size()) attrFile << ",";
          }
@@ -521,7 +543,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    cerr << "nodes in test set w/ no followers: " << tnnf << endl;
    cerr << "nodes in test set w/ no connections: " << tnnlf << endl;
    cerr << "nodes in validate set: " << validate_.size() << endl;
-   cerr << "nodes in va(last_id+1,pair<int,int>(0,0))lidate set w/ no leaders: " << vnnl << endl;
+   cerr << "nodes in validate set w/ no leaders: " << vnnl << endl;
    cerr << "nodes in validate set w/ no followers: " << vnnf << endl;
    cerr << "nodes in validate set w/ no connections: " << vnnlf << endl;
    
@@ -642,9 +664,11 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       
       map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTrain,rfTrainEdges, true /*isTrain*/);
-      map<int,EdgeRec2> myMissing2;
       map<int,map<string,pair<double,int> > > prAfBrecSum;
-      getMissing2(id,id,prAfBrecSum,myMissing2,rfTrain,rfTrainEdges, true /*isTrain*/,"",0);
+      vector<int> myDepth(DEPTH,0);
+      int maxdepth = recGetDepth(id,myDepth,0);
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << endl;
+      getMissing2(id,id,prAfBrecSum,rfTrain,rfTrainEdges, true /*isTrain*/,"",0,maxdepth);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
            << counter << "/" << counter2 << "/" << limit_train;
@@ -658,9 +682,11 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       int id = *it;
       map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTest,rfTestEdges, false /*isTrain*/);
-      map<int,EdgeRec2> myMissing2;
       map<int,map<string,pair<double,int> > > prAfBrecSum;
-      getMissing2(id,id,prAfBrecSum,myMissing2,rfTest,rfTestEdges, false /*isTrain*/,"",0);
+      vector<int> myDepth(DEPTH,0);
+      int maxdepth = recGetDepth(id,myDepth,0);
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << endl;
+      getMissing2(id,id,prAfBrecSum,rfTest,rfTestEdges, false /*isTrain*/,"",0,maxdepth);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
            << counter << "/" << limit_test;

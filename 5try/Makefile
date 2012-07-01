@@ -1,10 +1,10 @@
 CC=g++
 CFLAGS=-c
 LDFLAGS=
-MTRY=1
+MTRY=2
 TREES=333
 SEED=31120011
-SUBF = 1
+SUBF = 0
 NUMBERS = 3 4
 #NUMBERS = 3 4 5 6 7 8 9
 
@@ -16,7 +16,7 @@ xform_test: workspace/xform_test
 xform_predict: workspace/xform_predict
 rf: workspace/rf
 sleep_test:
-	sleep 1
+	sleep 3
 sleep_predict:
 	sleep 60
 score: workspace/score
@@ -38,7 +38,7 @@ workspace/xform_predict: bin/xform
 	touch workspace/xform_predict
 
 workspace/xform_test: bin/xform
-	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 1000 5
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 20000 10
 	rm -f workspace/rf
 	touch workspace/xform_test
 

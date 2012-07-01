@@ -73,16 +73,95 @@ bool sort_v_v_d(Voter a, Voter b) {
    return a.overlap > b.overlap;
 }
 
-void xData::getMissing2 (int id, map<int,EdgeRec2>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth) {
-   if (depth == DEPTH) return;
+const int DEPTH = 3;
+const int LS1 = 1;
+const int LS2 = 2;
+
+void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& prAfBrecSum, map<int,EdgeRec2>& myMissing2, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth) {
+   if (depth == DEPTH || (depth > 0 && A==B)) return;
    
    // traverse leader edges
-   string ltype = type + "L";
-   for(set<int>::iterator it_leader = graph_[id].leaders.begin(); it_leader != graph_[id].leaders.end(); it_leader++) {
-      
+   {
+      string newtype = type + "L";
+      int ao=0, bo=0, ab=0;
+      set<int> recommendations;
+      venn(graph_[A].leaders,graph_[B].leaders,ao,bo,ab,NULL,&recommendations,NULL);
+      if(recommendations.erase(A)>0) bo--;
+      double prAfBrecs = (double)(ab+LS1)/(double)(ab+bo+LS2);
+      //cerr << A << "," << B << " - " << newtype << "(" << prAfBrecs << "):";
+      prAfBrecSum[-1][newtype].first += prAfBrecs;
+      prAfBrecSum[-1][newtype].second += 1;
+      for(set<int>::iterator it_rec = recommendations.begin(); it_rec != recommendations.end(); it_rec++) {
+         //cerr << " " << *it_rec;
+         prAfBrecSum[*it_rec][newtype].first += prAfBrecs;
+         prAfBrecSum[*it_rec][newtype].second += 1;
+      }
+      //cerr << endl;
+      for(set<int>::iterator it_next = graph_[B].leaders.begin(); it_next != graph_[B].leaders.end(); it_next++) {
+         getMissing2(A,*it_next,prAfBrecSum,myMissing2,attrFile,edgeFile,isTrain,newtype,depth+1);
+      }
    }
    // traverse follower edges
-   string ftype = type + "F";
+   {
+      string newtype = type + "F";
+      int ao=0, bo=0, ab=0;
+      set<int> recommendations;
+      venn(graph_[A].leaders,graph_[B].followers,ao,bo,ab,NULL,&recommendations,NULL);
+      if(recommendations.erase(A)>0) bo--;
+      double prAfBrecs = (double)(ab+LS1)/(double)(ab+bo+LS2);
+      //cerr << A << "," << B << " - " << newtype << "(" << prAfBrecs << "):";
+      prAfBrecSum[-1][newtype].first += prAfBrecs;
+      prAfBrecSum[-1][newtype].second += 1;
+      for(set<int>::iterator it_rec = recommendations.begin(); it_rec != recommendations.end(); it_rec++) {
+         //cerr << " " << *it_rec;
+         prAfBrecSum[*it_rec][newtype].first += prAfBrecs;
+         prAfBrecSum[*it_rec][newtype].second += 1;
+      }
+      //cerr << endl;
+      for(set<int>::iterator it_next = graph_[B].followers.begin(); it_next != graph_[B].followers.end(); it_next++) {
+         getMissing2(A,*it_next,prAfBrecSum,myMissing2,attrFile,edgeFile,isTrain,newtype,depth+1);
+      }
+   }
+   if(depth==0) {
+      //cerr << "--" << A << "--" << endl;
+      vector<pair<int,double> > tmp;
+      for(map<int,map<string,pair<double,int> > >::iterator it_rec = prAfBrecSum.begin(); it_rec != prAfBrecSum.end(); it_rec++) {
+         if(it_rec->first == -1) continue;
+         double prAvgSum = 0;
+         int rec = it_rec->first;
+         for(map<string,pair<double,int> >::iterator it_type = (it_rec->second).begin(); it_type != (it_rec->second).end(); it_type++) {
+            string type = it_type->first;
+            //prAvgSum += (it_type->second).first / ((double)(it_type->second).second * pow(2,(double)type.size()));
+            prAvgSum += (it_type->second).first / (double)prAfBrecSum[-1][type].first;
+         }
+         tmp.push_back(pair<int,double>(rec,prAvgSum));
+      }
+      sort(tmp.begin(),tmp.end(),sort_v_p_i_d_d);
+      int counter=0;
+      for(vector<pair<int,double> >::iterator it_tmp = tmp.begin(); it_tmp != tmp.end() && counter < 50; it_tmp++) {
+         counter++;
+         if(isTrain) {
+            if(validate_[A].find((*it_tmp).first) != validate_[A].end()) attrFile << "1,";
+            else attrFile << "0,";
+         }
+         int types_count = 0;
+         for(set<string>::iterator it_type = types_.begin(); it_type != types_.end(); it_type++) {
+            types_count++;
+            if(prAfBrecSum[(*it_tmp).first].find(*it_type) == prAfBrecSum[(*it_tmp).first].end()) {
+               if(*it_type == "F") attrFile << "0,0";
+               else attrFile << "0";
+            } else {
+               if(*it_type == "F") attrFile << graph_[(*it_tmp).first].myLsConnectBack_rate << "," << prAfBrecSum[(*it_tmp).first][*it_type].first;
+               else attrFile << prAfBrecSum[(*it_tmp).first][*it_type].first / (double)prAfBrecSum[-1][*it_type].first;
+            }
+            if(types_count < types_.size()) attrFile << ",";
+         }
+         attrFile << endl;
+         edgeFile << A << "," << (*it_tmp).first << endl;
+      }
+      attrFile << flush;
+      edgeFile << flush;
+   }
 }
 
 void xData::getMissing (int id, map<int,EdgeRec>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain) {
@@ -272,6 +351,16 @@ void xData::getMissing (int id, map<int,EdgeRec>& myMissing, ofstream& attrFile,
 
 }
 
+void recSetType(set<string>& types, string type, int depth) {
+   if(depth == DEPTH) return;
+   string newtype = type + "L";
+   types.insert(newtype);
+   recSetType(types, newtype, depth+1);
+   newtype = type + "F";
+   types.insert(newtype);
+   recSetType(types, newtype, depth+1);
+}
+
 xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int limit_test) {
    recommend_Fs_ = true;
    recommend_FsLs_ = true;
@@ -280,6 +369,8 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    recommend_LsFs_ = true;
    recommend_LsFsLs_ = true;
    good_ = true;
+   recSetType(types_,"",0);
+   types_.erase("L");
    //igzstream fTrain(trainFile);
    ifstream fTrain(trainFile);
    if(!fTrain.good()) {
@@ -434,7 +525,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    cerr << "nodes in validate set w/ no followers: " << vnnf << endl;
    cerr << "nodes in validate set w/ no connections: " << vnnlf << endl;
    
-   if(1) {
+   if(0) {
       vector<pair<int,int> > globalLeaders_(last_id+1,pair<int,int>(0,0));
       //vector<pair<int,int> > globalFollowers_(last_id+1,pair<int,int>(0,0));
 
@@ -456,6 +547,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       }
    }
    cerr << "Predicting missing edges..." << endl;
+   if(1) {
    cerr << "   determining friends and connect back rates..." << endl;
    for(int i=0; i<graph_.size(); i++) {
       if((graph_[i].leaders.size() == 0 || graph_[i].followers.size() == 0) && 0) {
@@ -475,6 +567,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       }
       //cout << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b" \
            << i+1 << "/" << graph_.size() << "; fbr: " << graph_[i].myLsConnectBack_rate << endl;
+   }
    }
    cerr << endl;
    
@@ -511,7 +604,15 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       cerr << "Cannot open workspace/step1_validate.csv for writing" << endl;
       return;
    }
-   string header1="Fs,FsLs,FsFs,LsLs,LsFs,LsFsLs";
+   //string header1="Fs,FsLs,FsFs,LsLs,LsFs,LsFsLs";
+   string header1;
+   int types_count = 0;
+   for(set<string>::iterator it_h1 = types_.begin(); it_h1 != types_.end(); it_h1++) {
+      types_count++;
+      if(*it_h1 == "F") header1 += "Fcb," + *it_h1;
+      else header1 += *it_h1;
+      if(types_count != types_.size()) header1 += ",";
+   }
    string header2("source,dest");
    rfTrain << "RealEdge,";
    rfTrain << header1 << endl;
@@ -542,10 +643,12 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTrain,rfTrainEdges, true /*isTrain*/);
       map<int,EdgeRec2> myMissing2;
-      getMissing2(id,myMissing2,rfTrain,rfTrainEdges, true /*isTrain*/,"",0);
+      map<int,map<string,pair<double,int> > > prAfBrecSum;
+      getMissing2(id,id,prAfBrecSum,myMissing2,rfTrain,rfTrainEdges, true /*isTrain*/,"",0);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
            << counter << "/" << counter2 << "/" << limit_train;
+      cerr << endl;
       //if(counter == limit_train) break;
    }
    cerr << endl;
@@ -556,10 +659,12 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTest,rfTestEdges, false /*isTrain*/);
       map<int,EdgeRec2> myMissing2;
-      getMissing2(id,myMissing2,rfTest,rfTestEdges, false /*isTrain*/,"",0);
+      map<int,map<string,pair<double,int> > > prAfBrecSum;
+      getMissing2(id,id,prAfBrecSum,myMissing2,rfTest,rfTestEdges, false /*isTrain*/,"",0);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
            << counter << "/" << limit_test;
+      cerr << endl;
       if(counter == limit_test) break;
    }
    cerr << endl;

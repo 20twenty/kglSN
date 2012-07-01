@@ -23,12 +23,9 @@ struct Voter {
    set<int> recommendations;
 };
 
-const int DEPTH = 2;
-const int prSIZE = (int)pow(2.0,(double)DEPTH);
-
 struct EdgeRec2 {
-   map<string,double> prAfBtype;
-   map<string,double> prBlAtype;
+   map<string,pair<int,int> > prAfBtype;
+   map<string,pair<int,int> > prBlAtype;
 };
 
 struct EdgeRec {
@@ -48,7 +45,7 @@ class xData {
       vector<int> test_;
       map<int,set<int> > validate_;
       void getMissing(int id, map<int,EdgeRec>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain);
-      void getMissing2(int id, map<int,EdgeRec2>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth);
+      void getMissing2(int source, int dest, map<int,map<string,pair<double,int> > >& prAfBrecSum, map<int,EdgeRec2>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth);
       xData(char* trainFile, char* testFile, int seed, int limit_train, int limit_test);
       ~xData();
 
@@ -60,7 +57,7 @@ class xData {
       bool recommend_LsLs_;
       bool recommend_LsFs_;
       bool recommend_LsFsLs_;
-
+      set<string> types_;
 };
 #endif
 

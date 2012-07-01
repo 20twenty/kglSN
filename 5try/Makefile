@@ -56,8 +56,10 @@ workspace/score: workspace/rf
 	touch workspace/score
 
 clean:
-	rm -f workspace/oob_predict*
-	rm -f workspace/tst_predict*
-	rm -f workspace/step1*
-	rm -f workspace/*.csv
+	rm -f workspace/*
+	#rm -f workspace/oob_predict*
+	#rm -f workspace/tst_predict*
+	#rm -f workspace/step1*
+	#rm -f workspace/*.csv
+	#rm -f workspace/rf workspace/score workspace/xform*
 	rm -f log*

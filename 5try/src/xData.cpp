@@ -73,6 +73,18 @@ bool sort_v_v_d(Voter a, Voter b) {
    return a.overlap > b.overlap;
 }
 
+void xData::getMissing2 (int id, map<int,EdgeRec2>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth) {
+   if (depth == DEPTH) return;
+   
+   // traverse leader edges
+   string ltype = type + "L";
+   for(set<int>::iterator it_leader = graph_[id].leaders.begin(); it_leader != graph_[id].leaders.end(); it_leader++) {
+      
+   }
+   // traverse follower edges
+   string ftype = type + "F";
+}
+
 void xData::getMissing (int id, map<int,EdgeRec>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain) {
    int voter_limit = 10;
    int topN=9;
@@ -299,8 +311,6 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       int row = 0;
       bool header_row = true;  //header_row is first row in csv
       graph_.assign(last_id+1,Node());
-      globalLeaders_.assign(last_id+1,pair<int,int>(0,0));
-      globalFollowers_.assign(last_id+1,pair<int,int>(0,0));
       while(fTrain.good() /*&& row < 10*/) {
          getline(fTrain,line);
          if(line.length() == 0) continue;
@@ -420,23 +430,26 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    cerr << "nodes in test set w/ no followers: " << tnnf << endl;
    cerr << "nodes in test set w/ no connections: " << tnnlf << endl;
    cerr << "nodes in validate set: " << validate_.size() << endl;
-   cerr << "nodes in validate set w/ no leaders: " << vnnl << endl;
+   cerr << "nodes in va(last_id+1,pair<int,int>(0,0))lidate set w/ no leaders: " << vnnl << endl;
    cerr << "nodes in validate set w/ no followers: " << vnnf << endl;
    cerr << "nodes in validate set w/ no connections: " << vnnlf << endl;
    
-   if(0) {
+   if(1) {
+      vector<pair<int,int> > globalLeaders_(last_id+1,pair<int,int>(0,0));
+      //vector<pair<int,int> > globalFollowers_(last_id+1,pair<int,int>(0,0));
+
       for(int id = 1; id < graph_.size(); id++) {
-         globalFollowers_[id].first = id;
-         globalFollowers_[id].second = graph_[id].leaders.size();
+         //globalFollowers_[id].first = id;
+         //globalFollowers_[id].second = graph_[id].leaders.size();
          globalLeaders_[id].first = id;
          globalLeaders_[id].second = graph_[id].followers.size();
       }
-      sort(globalFollowers_.begin(), globalFollowers_.end(), sort_v_p_i_i_d);
+      //sort(globalFollowers_.begin(), globalFollowers_.end(), sort_v_p_i_i_d);
       sort(globalLeaders_.begin(), globalLeaders_.end(), sort_v_p_i_i_d);
-      cerr << "Top followers..." << endl;
-      for(int n=0; n<10; n++) {
-         cerr << "   id: " << globalFollowers_[n].first << "; followingCnt: " << globalFollowers_[n].second << endl;
-      }
+      //cerr << "Top followers..." << endl;
+      //for(int n=0; n<10; n++) {
+      //   cerr << "   id: " << globalFollowers_[n].first << "; followingCnt: " << globalFollowers_[n].second << endl;
+      //}
       cerr << "Top leaders..." << endl;
       for(int n=0; n<10; n++) {
          cerr << "   id: " << globalLeaders_[n].first << "; leadingCnt: " << globalLeaders_[n].second << endl;
@@ -527,7 +540,9 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       rfValidate << endl;
       
       map<int,EdgeRec> myMissing;
-      getMissing(id,myMissing,rfTrain,rfTrainEdges, true /*isTrain*/);
+      //getMissing(id,myMissing,rfTrain,rfTrainEdges, true /*isTrain*/);
+      map<int,EdgeRec2> myMissing2;
+      getMissing2(id,myMissing2,rfTrain,rfTrainEdges, true /*isTrain*/,"",0);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
            << counter << "/" << counter2 << "/" << limit_train;
@@ -539,7 +554,9 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    for(vector<int>::iterator it = test_.begin(); it != test_.end(); it++) {
       int id = *it;
       map<int,EdgeRec> myMissing;
-      getMissing(id,myMissing,rfTest,rfTestEdges, false /*isTrain*/);
+      //getMissing(id,myMissing,rfTest,rfTestEdges, false /*isTrain*/);
+      map<int,EdgeRec2> myMissing2;
+      getMissing2(id,myMissing2,rfTest,rfTestEdges, false /*isTrain*/,"",0);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
            << counter << "/" << limit_test;

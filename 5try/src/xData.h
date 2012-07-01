@@ -5,6 +5,7 @@
 #include <set>
 #include <map>
 #include <iostream>
+#include <math.h>
 
 using namespace std;
 
@@ -20,6 +21,14 @@ struct Voter {
    int id;
    double overlap;
    set<int> recommendations;
+};
+
+const int DEPTH = 2;
+const int prSIZE = (int)pow(2.0,(double)DEPTH);
+
+struct EdgeRec2 {
+   map<string,double> prAfBtype;
+   map<string,double> prBlAtype;
 };
 
 struct EdgeRec {
@@ -38,8 +47,8 @@ class xData {
       vector<Node> graph_;
       vector<int> test_;
       map<int,set<int> > validate_;
-      vector<pair<int,int> > globalLeaders_, globalFollowers_;
       void getMissing(int id, map<int,EdgeRec>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain);
+      void getMissing2(int id, map<int,EdgeRec2>& myMissing, ofstream& attrFile, ofstream& edgeFile, bool isTrain, string type, int depth);
       xData(char* trainFile, char* testFile, int seed, int limit_train, int limit_test);
       ~xData();
 

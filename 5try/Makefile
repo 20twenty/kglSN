@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c
 LDFLAGS=
-MTRY=4
+MTRY=1
 TREES=125
 SEED=31120011
 SUBF = 0
@@ -38,7 +38,7 @@ workspace/xform_predict: bin/xform
 	touch workspace/xform_predict
 
 workspace/xform_test: bin/xform
-	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 50 10
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 1000 10
 	rm -f workspace/rf
 	touch workspace/xform_test
 

@@ -78,7 +78,7 @@ const int LS1 = 1;
 const int LS2 = 2;
 
 int xData::recGetDepth (int A, vector<int>& myDepth, int depth) {
-   if(depth == DEPTH) return 0;
+   if(depth == DEPTH || myDepth[depth] > 10000) return 0;
    myDepth[depth]+=graph_[A].leaders.size() + graph_[A].followers.size();
    for(set<int>::iterator it_next = graph_[A].leaders.begin(); it_next != graph_[A].leaders.end(); it_next++) {
          recGetDepth(*it_next, myDepth, depth+1);
@@ -154,7 +154,7 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
          for(map<string,pair<double,int> >::iterator it_type = (it_rec->second).begin(); it_type != (it_rec->second).end(); it_type++) {
             string type = it_type->first;
             //prAvgSum += (it_type->second).first / ((double)(it_type->second).second * pow(2,(double)type.size()));
-            prAvgSum += (it_type->second).first / (double)prAfBrecSum[-1][type].second;
+            prAvgSum += (it_type->second).first / ((double)prAfBrecSum[-1][type].second * pow(2,(double)type.size()));
          }
          tmp.push_back(pair<int,double>(rec,prAvgSum));
       }
@@ -667,7 +667,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       map<int,map<string,pair<double,int> > > prAfBrecSum;
       vector<int> myDepth(DEPTH,0);
       int maxdepth = recGetDepth(id,myDepth,0);
-      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << endl;
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
       getMissing2(id,id,prAfBrecSum,rfTrain,rfTrainEdges, true /*isTrain*/,"",0,maxdepth);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
@@ -685,7 +685,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       map<int,map<string,pair<double,int> > > prAfBrecSum;
       vector<int> myDepth(DEPTH,0);
       int maxdepth = recGetDepth(id,myDepth,0);
-      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << endl;
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
       getMissing2(id,id,prAfBrecSum,rfTest,rfTestEdges, false /*isTrain*/,"",0,maxdepth);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"

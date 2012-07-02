@@ -73,12 +73,13 @@ bool sort_v_v_d(Voter a, Voter b) {
    return a.overlap > b.overlap;
 }
 
-const int DEPTH = 4;
-const int LS1 = 1;
-const int LS2 = 2;
+const int DEPTH = 3;
+const int LIMIT = 20000;
+const int LS1 = 2;
+const int LS2 = 4;
 
 int xData::recGetDepth (int A, vector<int>& myDepth, int depth) {
-   if(depth == DEPTH) return 0;
+   if(depth == DEPTH || myDepth[depth] > LIMIT) return 0;
    myDepth[depth]+=graph_[A].leaders.size() + graph_[A].followers.size();
    for(set<int>::iterator it_next = graph_[A].leaders.begin(); it_next != graph_[A].leaders.end(); it_next++) {
          recGetDepth(*it_next, myDepth, depth+1);
@@ -89,7 +90,7 @@ int xData::recGetDepth (int A, vector<int>& myDepth, int depth) {
    if(depth == 0) {
       int maxdepth = DEPTH;
       for(int i = 0; i < DEPTH; i++) {
-         if (myDepth[i] > 10000) {
+         if (myDepth[i] > LIMIT) {
             maxdepth = i+1;
             break;
          }
@@ -109,7 +110,8 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
       set<int> recommendations;
       venn(graph_[A].leaders,graph_[B].leaders,ao,bo,ab,NULL,&recommendations,NULL);
       if(recommendations.erase(A)>0) bo--;
-      double prAfBrecs = (double)(ab+LS1)/(double)(ab+bo+LS2);
+      double prAfBrecs = 0;
+      if(ab+bo+LS2 > 0) prAfBrecs = (double)(ab+LS1)/(double)(ab+bo+LS2);
       //cerr << A << "," << B << " - " << newtype << "(" << prAfBrecs << "):";
       prAfBrecSum[-1][newtype].first += prAfBrecs;
       prAfBrecSum[-1][newtype].second += 1;
@@ -130,7 +132,8 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
       set<int> recommendations;
       venn(graph_[A].leaders,graph_[B].followers,ao,bo,ab,NULL,&recommendations,NULL);
       if(recommendations.erase(A)>0) bo--;
-      double prAfBrecs = (double)(ab+LS1)/(double)(ab+bo+LS2);
+      double prAfBrecs = 0;
+      if(ab+bo+LS2 > 0) prAfBrecs = (double)(ab+LS1)/(double)(ab+bo+LS2);
       //cerr << A << "," << B << " - " << newtype << "(" << prAfBrecs << "):";
       prAfBrecSum[-1][newtype].first += prAfBrecs;
       prAfBrecSum[-1][newtype].second += 1;
@@ -154,7 +157,8 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
          for(map<string,pair<double,int> >::iterator it_type = (it_rec->second).begin(); it_type != (it_rec->second).end(); it_type++) {
             string type = it_type->first;
             //prAvgSum += (it_type->second).first / ((double)(it_type->second).second * pow(2,(double)type.size()));
-            prAvgSum += (it_type->second).first / (double)prAfBrecSum[-1][type].second;
+            prAvgSum += (it_type->second).first / ((double)prAfBrecSum[-1][type].second * pow(2,(double)type.size()));
+            //prAvgSum += (it_type->second).first / (double)prAfBrecSum[-1][type].second;
          }
          tmp.push_back(pair<int,double>(rec,prAvgSum));
       }
@@ -166,6 +170,7 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
             if(validate_[A].find((*it_tmp).first) != validate_[A].end()) attrFile << "1,";
             else attrFile << "0,";
          }
+         //attrFile << (*it_tmp).second << ",";
          int types_count = 0;
          for(set<string>::iterator it_type = types_.begin(); it_type != types_.end(); it_type++) {
             types_count++;
@@ -582,9 +587,9 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
          graph_[i].pLO = (double)(ao_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
          graph_[i].pFO = (double)(bo_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
          graph_[i].pFR = (double)(ab_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
-
-         graph_[i].myLsConnectBack_rate = (double)(ab_cnt+1)/(double)(ao_cnt+ab_cnt+2);
-         graph_[i].myFsConnectBack_rate = (double)(ab_cnt+1)/(double)(bo_cnt+ab_cnt+2);
+         int ls1 = 1, ls2 = 2;
+         if(ao_cnt+ab_cnt+ls2 > 0) graph_[i].myLsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(ao_cnt+ab_cnt+ls2);
+         if(bo_cnt+ab_cnt+ls2 > 0) graph_[i].myFsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(bo_cnt+ab_cnt+ls2);
 
       }
       //cout << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b" \
@@ -667,7 +672,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       map<int,map<string,pair<double,int> > > prAfBrecSum;
       vector<int> myDepth(DEPTH,0);
       int maxdepth = recGetDepth(id,myDepth,0);
-      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << endl;
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
       getMissing2(id,id,prAfBrecSum,rfTrain,rfTrainEdges, true /*isTrain*/,"",0,maxdepth);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
@@ -685,7 +690,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       map<int,map<string,pair<double,int> > > prAfBrecSum;
       vector<int> myDepth(DEPTH,0);
       int maxdepth = recGetDepth(id,myDepth,0);
-      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << endl;
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
       getMissing2(id,id,prAfBrecSum,rfTest,rfTestEdges, false /*isTrain*/,"",0,maxdepth);
       counter++;
       cerr << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"

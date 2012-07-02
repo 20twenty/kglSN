@@ -2,11 +2,12 @@ CC=g++
 CFLAGS=-c
 LDFLAGS=
 MTRY=2
-TREES=125
+#TREES=125
+TREES=333
 SEED=31120011
 SUBF = 0
-#NUMBERS = 3 4
-NUMBERS = 3 4 5 6 7 8 9
+NUMBERS = 3 4
+#NUMBERS = 3 4 5 6 7 8 9
 
 test: exe xform_test rf sleep_test score
 predict: exe xform_predict rf sleep_predict score

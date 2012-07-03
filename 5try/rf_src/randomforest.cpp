@@ -61,7 +61,7 @@ void create_bag(vector<pair<int,int> >& bag, vector<pair<int,int> >& oob, vector
       int idx = rand() % sample_cnt;
       int id = orig_idx[idx];
       bagMap[id]+=w[idx];  //with replacement
-      //bagMap[id]=1;  //without replacement
+      //bagMap[id]=w[idx];  //without replacement
    }
    for(map<int,int>::iterator it = bagMap.begin(); it != bagMap.end(); it++) {
       bag.push_back(pair<int,int>(it->first,it->second));
@@ -364,7 +364,8 @@ void RandomForest::build() {
       vector<int> w(train_idx.size(),0);
       for(int idx=0; idx<train_idx.size(); idx++) {
          //w[idx]=(int)(338 / pXD_->trn_attr[train_idx[idx]][(pXD_->trn_cols)-1]);
-         w[idx]=1;
+         if(pXD_->trn_labl[train_idx[idx]] == 1) w[idx]=1;
+         else w[idx]=1;
          //cout << pXD_->trn_attr[train_idx[idx]][(pXD_->trn_cols)-1] << "," << w[idx] << endl;
       }
       create_bag(bag,oob,train_idx,w);

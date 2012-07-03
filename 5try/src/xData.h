@@ -15,6 +15,10 @@ struct Node {
    double pFO, pLO, pFR;
    double myLsConnectBack_rate;
    double myFsConnectBack_rate;
+   double myLsLsConnectBack_rate;
+   double myLsFsConnectBack_rate;
+   double myFsLsConnectBack_rate;
+   double myFsFsConnectBack_rate;
 };
 
 struct Voter {

@@ -175,10 +175,18 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
          for(set<string>::iterator it_type = types_.begin(); it_type != types_.end(); it_type++) {
             types_count++;
             if(prAfBrecSum[(*it_tmp).first].find(*it_type) == prAfBrecSum[(*it_tmp).first].end()) {
-               if(*it_type == "F") attrFile << "0,0";
-               else attrFile << "0";
+               if(*it_type == "F") attrFile << "0,";
+               else if(*it_type == "FF") attrFile << "0,";
+               else if(*it_type == "LF") attrFile << "0,";
+               else if(*it_type == "FL") attrFile << "0,";
+               else if(*it_type == "LL") attrFile << "0,";
+               attrFile << "0";
             } else {
                if(*it_type == "F") attrFile << graph_[(*it_tmp).first].myLsConnectBack_rate << ","; // << prAfBrecSum[(*it_tmp).first][*it_type].first;
+               else if(*it_type == "FF") attrFile << graph_[(*it_tmp).first].myLsLsConnectBack_rate << ","; // << prAfBrecSum[(*it_tmp).first][*it_type].first;
+               else if(*it_type == "LF") attrFile << graph_[(*it_tmp).first].myLsFsConnectBack_rate << ","; // << prAfBrecSum[(*it_tmp).first][*it_type].first;
+               else if(*it_type == "FL") attrFile << graph_[(*it_tmp).first].myFsLsConnectBack_rate << ","; // << prAfBrecSum[(*it_tmp).first][*it_type].first;
+               else if(*it_type == "LL") attrFile << graph_[(*it_tmp).first].myFsFsConnectBack_rate << ","; // << prAfBrecSum[(*it_tmp).first][*it_type].first;
                attrFile << prAfBrecSum[(*it_tmp).first][*it_type].first / (double)prAfBrecSum[-1][*it_type].second;
             }
             if(types_count < types_.size()) attrFile << ",";
@@ -580,17 +588,51 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       if((graph_[i].leaders.size() == 0 || graph_[i].followers.size() == 0) && 0) {
          graph_[i].myLsConnectBack_rate = 0.5;
          graph_[i].myFsConnectBack_rate = 0.5;
+         graph_[i].myLsLsConnectBack_rate = 0.5;
+         graph_[i].myLsFsConnectBack_rate = 0.5;
+         graph_[i].myFsLsConnectBack_rate = 0.5;
+         graph_[i].myFsFsConnectBack_rate = 0.5;
       } else {
-         int ao_cnt=0, bo_cnt=0, ab_cnt=0;
-         set<int> ab;
-         venn(graph_[i].leaders, graph_[i].followers, ao_cnt, bo_cnt, ab_cnt, NULL, NULL, NULL);
-         graph_[i].pLO = (double)(ao_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
-         graph_[i].pFO = (double)(bo_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
-         graph_[i].pFR = (double)(ab_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
          int ls1 = 1, ls2 = 2;
-         if(ao_cnt+ab_cnt+ls2 > 0) graph_[i].myLsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(ao_cnt+ab_cnt+ls2);
-         if(bo_cnt+ab_cnt+ls2 > 0) graph_[i].myFsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(bo_cnt+ab_cnt+ls2);
+         {
+            int ao_cnt=0, bo_cnt=0, ab_cnt=0;
+            venn(graph_[i].leaders, graph_[i].followers, ao_cnt, bo_cnt, ab_cnt, NULL, NULL, NULL);
+            graph_[i].pLO = (double)(ao_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
+            graph_[i].pFO = (double)(bo_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
+            graph_[i].pFR = (double)(ab_cnt+1)/(double)(ao_cnt+bo_cnt+ab_cnt+2);
+            if(ao_cnt+ab_cnt+ls2 > 0) graph_[i].myLsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(ao_cnt+ab_cnt+ls2);
+            if(bo_cnt+ab_cnt+ls2 > 0) graph_[i].myFsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(bo_cnt+ab_cnt+ls2);
+         }
+         {
+            set<int> myLsLs;
+            set<int> myLsFs;
+            for(set<int>::iterator it_l = graph_[i].leaders.begin(); it_l != graph_[i].leaders.end(); it_l++) {
+               myLsLs.insert(graph_[*it_l].leaders.begin(),graph_[*it_l].leaders.end());
+               myLsFs.insert(graph_[*it_l].followers.begin(),graph_[*it_l].followers.end());
+            }
+            int ao_cnt=0, bo_cnt=0, ab_cnt=0;
+            venn(myLsLs, graph_[i].followers, ao_cnt, bo_cnt, ab_cnt, NULL, NULL, NULL);
+            if(ao_cnt+ab_cnt+ls2 > 0) graph_[i].myLsLsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(ao_cnt+ab_cnt+ls2);
 
+            ao_cnt=0, bo_cnt=0, ab_cnt=0;
+            venn(myLsFs, graph_[i].followers, ao_cnt, bo_cnt, ab_cnt, NULL, NULL, NULL);
+            if(ao_cnt+ab_cnt+ls2 > 0) graph_[i].myLsFsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(ao_cnt+ab_cnt+ls2);
+         }
+         {
+            set<int> myFsLs;
+            set<int> myFsFs;
+            for(set<int>::iterator it_l = graph_[i].followers.begin(); it_l != graph_[i].followers.end(); it_l++) {
+               myFsLs.insert(graph_[*it_l].leaders.begin(),graph_[*it_l].leaders.end());
+               myFsFs.insert(graph_[*it_l].followers.begin(),graph_[*it_l].followers.end());
+            }
+            int ao_cnt=0, bo_cnt=0, ab_cnt=0;
+            venn(myFsLs, graph_[i].followers, ao_cnt, bo_cnt, ab_cnt, NULL, NULL, NULL);
+            if(ao_cnt+ab_cnt+ls2 > 0) graph_[i].myFsLsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(ao_cnt+ab_cnt+ls2);
+
+            ao_cnt=0, bo_cnt=0, ab_cnt=0;
+            venn(myFsFs, graph_[i].followers, ao_cnt, bo_cnt, ab_cnt, NULL, NULL, NULL);
+            if(ao_cnt+ab_cnt+ls2 > 0) graph_[i].myFsFsConnectBack_rate = (double)(ab_cnt+ls1)/(double)(ao_cnt+ab_cnt+ls2);
+         }
       }
       //cout << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b" \
            << i+1 << "/" << graph_.size() << "; fbr: " << graph_[i].myLsConnectBack_rate << endl;
@@ -637,6 +679,10 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    for(set<string>::iterator it_h1 = types_.begin(); it_h1 != types_.end(); it_h1++) {
       types_count++;
       if(*it_h1 == "F") header1 += "Fcb," + *it_h1;
+      else if(*it_h1 == "FF") header1 += "FFcb," + *it_h1;
+      else if(*it_h1 == "LF") header1 += "LFcb," + *it_h1;
+      else if(*it_h1 == "FL") header1 += "FLcb," + *it_h1;
+      else if(*it_h1 == "LL") header1 += "LLcb," + *it_h1;
       else header1 += *it_h1;
       if(types_count != types_.size()) header1 += ",";
    }

@@ -2,15 +2,15 @@ CC=g++
 CFLAGS=-c
 LDFLAGS=
 MTRY=2
-TREES=63
-#TREES=200
+#TREES=63
+TREES=200
 #TREES=333
 SEED=31120011
 SUBF = 0
 #NUMBERS = 3 4
-#NUMBERS = 3 4 5 6 7 8 9
+NUMBERS = 3 4 5 6 7 8 9
 #NUMBERS = 3 4 5 6 7 8 9 10 11
-NUMBERS = 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+#NUMBERS = 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
 
 test: exe xform_test rf sleep_test score
 predict: exe xform_predict rf sleep_predict score
@@ -22,7 +22,7 @@ rf: workspace/rf
 sleep_test:
 	sleep 60
 sleep_predict:
-	sleep 60
+	sleep 300
 score: workspace/score
 
 bin/xform: src/xform.cpp src/xData.cpp src/xData.h

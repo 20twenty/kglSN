@@ -139,6 +139,7 @@ void xData::getMissing2 (int A, int B, map<int,map<string,pair<double,int> > >& 
       prAfBrecSum[-1][newtype].second += 1;
       for(set<int>::iterator it_rec = recommendations.begin(); it_rec != recommendations.end(); it_rec++) {
          //cerr << " " << *it_rec;
+         //prAfBrecSum[*it_rec][newtype].first += prAfBrecs/(double)recommendations.size();
          prAfBrecSum[*it_rec][newtype].first += prAfBrecs;
          prAfBrecSum[*it_rec][newtype].second += 1;
       }

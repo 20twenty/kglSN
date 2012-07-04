@@ -21,18 +21,18 @@ bool f_ig_cut_sort(f_ig_cut a, f_ig_cut b) {
    return a.ig > b.ig;
 }
 
-/*
 double Entropy (int aCnt, int bCnt) {
    if(aCnt == 0 || bCnt == 0) return 0.0;
    double fA = (double)aCnt/(double)(aCnt+bCnt);
    double fB = (double)bCnt/(double)(aCnt+bCnt);
    return -(fA*log(fA)+fB*log(fB));
 }
-*/
 
+/*
 double Entropy (int aCnt, int bCnt) { // actually gini impurity
    return 1 - pow(((double)aCnt/(double)(aCnt+bCnt)),2) - pow(((double)bCnt/(double)(aCnt+bCnt)),2);
 }
+*/
 
 double infoGain(vector<vector<int> >& al) {
    int total_l0=0, total_l1=0;
@@ -54,22 +54,27 @@ double infoGain(vector<vector<int> >& al) {
 }
 
 
-void create_bag(vector<pair<int,int> >& bag, vector<pair<int,int> >& oob, vector<int>& orig_idx, vector<int>& w) {
+void create_bag(vector<pair<int,int> >& bag, vector<pair<int,int> >& oob, vector<vector<int> >& orig_idx/*, vector<int>& w*/) {
    map<int,int> bagMap;
-   int sample_cnt = orig_idx.size();
-   for(int sample=0; sample < sample_cnt; sample++) {
-      int idx = rand() % sample_cnt;
-      int id = orig_idx[idx];
-      bagMap[id]+=w[idx];  //with replacement
-      //bagMap[id]=w[idx];  //without replacement
-   }
-   for(map<int,int>::iterator it = bagMap.begin(); it != bagMap.end(); it++) {
-      bag.push_back(pair<int,int>(it->first,it->second));
-   }
+   for(int labl = 0; labl < orig_idx.size(); labl++) {
+      int sample_cnt = orig_idx[labl].size();
+      //int sample_cnt = orig_idx[1].size();
+      for(int sample=0; sample < sample_cnt; sample++) {
+         int idx = rand() % sample_cnt;
+         int id = orig_idx[labl][idx];
+         //bagMap[id]+=w[idx];  //with replacement
+         bagMap[id]+=1;  //with replacement
+         //bagMap[id]=w[idx];  //without replacement
+         //bagMap[id]=1;  //without replacement
+      }
+      for(map<int,int>::iterator it = bagMap.begin(); it != bagMap.end(); it++) {
+         bag.push_back(pair<int,int>(it->first,it->second));
+      }
 
-   for(vector<int>::iterator it = orig_idx.begin(); it != orig_idx.end(); it++) {
-      if(bagMap.find(*it) == bagMap.end()) {
-         oob.push_back(pair<int,int>(*it,1));
+      for(vector<int>::iterator it = orig_idx[labl].begin(); it != orig_idx[labl].end(); it++) {
+         if(bagMap.find(*it) == bagMap.end()) {
+            oob.push_back(pair<int,int>(*it,1));
+         }
       }
    }
    /*
@@ -163,8 +168,10 @@ void RandomForest::recAssignNode(Node* pNode, vector<pair<int,int> >& idx_orig, 
    double ig=-1;
    int approach = 1;
    vector<f_ig_cut> vBestF;
-   int step_size = (int)(0.01*(double)idx_orig.size());
-   if(step_size < 1) step_size = 1;
+   //int step_size = (int)(0.00015*(double)idx_orig.size());
+   //if(step_size < 1) step_size = 1;
+   int step_size = 1;
+   if(step_size > idx_orig.size()) step_size = idx_orig.size();
    for(int attr_idx = 0; attr_idx < feature_sample_cnt; attr_idx++) {
       //double cutVal = (double)((rand() % 1000)+1)/(double)(1001);
       //cout << features[attr_idx] << ":" << pXD_->attr_class[features[attr_idx]] << ":" << pXD_->attr_class.size() << endl;
@@ -187,7 +194,7 @@ void RandomForest::recAssignNode(Node* pNode, vector<pair<int,int> >& idx_orig, 
             attr_val = pXD_->trn_attr[ex_id][features[attr_idx]];
             a_l_cnt[0][labl] += ex_cnt;
             a_l_cnt[1][labl] -= ex_cnt;
-            if (pXD_->trn_attr[ex_id_next][features[attr_idx]] == attr_val || (exii % step_size) != 0) continue;
+            if (pXD_->trn_attr[ex_id_next][features[attr_idx]] == attr_val || pXD_->trn_labl[ex_id_next] == labl || (exii % step_size) != 0) continue;
             ig = infoGain(a_l_cnt);
             if(ig>best_ig) {
                best_ig = ig;
@@ -350,25 +357,28 @@ void RandomForest::build() {
    fcntl (0, F_SETFL, (tem | O_NDELAY));
    // end key press setup
 
-   vector<int> train_idx;
+   vector<vector<int> > train_idx(2,vector<int>(0,0));
    vector<pair<int,int> > validate;
    for(int i=0; i<pXD_->trn_labl.size(); i++) {
       if((rand() % folds_) == fold_) validate.push_back(pair<int,int>(i,1));
-      else train_idx.push_back(i);
+      else train_idx[(int)pXD_->trn_labl[i]].push_back(i);
    }
 
    int tree = 0;
    while(1) {
       //base_feature_sample_cnt_ = (int)(pow((double)(rand() % 1000)/1000.0,2) * 400); //(int)((double)train_idx.size()/3.0);
       vector<pair<int,int> > bag, oob;
-      vector<int> w(train_idx.size(),0);
+      //vector<int> w(train_idx.size(),0);
+      /*
       for(int idx=0; idx<train_idx.size(); idx++) {
          //w[idx]=(int)(338 / pXD_->trn_attr[train_idx[idx]][(pXD_->trn_cols)-1]);
          if(pXD_->trn_labl[train_idx[idx]] == 1) w[idx]=1;
          else w[idx]=1;
          //cout << pXD_->trn_attr[train_idx[idx]][(pXD_->trn_cols)-1] << "," << w[idx] << endl;
       }
-      create_bag(bag,oob,train_idx,w);
+      */
+      //create_bag(bag,oob,train_idx,w);
+      create_bag(bag,oob,train_idx);
       Node root;
       int node_cnt=0; 
       double tree_gini=0;

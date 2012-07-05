@@ -114,7 +114,7 @@ RandomForest::RandomForest(xData* pXD, int fold, int folds, int Mtry, int trees,
    ls1_ = 1;
    ls2_ = 2;
    if(subset_on) {
-      int myints[] = {1,2,5,8,11};
+      int myints[] = {1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
 
       good_features_.assign(myints, myints+sizeof(myints)/sizeof(int) );
       

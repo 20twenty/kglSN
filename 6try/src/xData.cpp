@@ -106,6 +106,7 @@ void xData::writeFiles (int A, map<int,map<string,pair<double,int> > >& prAfBrec
       //cerr << "--" << A << "--" << endl;
       vector<pair<int,double> > tmp;
 
+      double max_bank = 0;
       if(0) {
          for(map<int,map<string,pair<double,int> > >::iterator it_rec = prAfBrecSum.begin(); it_rec != prAfBrecSum.end(); it_rec++) {
             if(it_rec->first == -1) continue;
@@ -121,13 +122,15 @@ void xData::writeFiles (int A, map<int,map<string,pair<double,int> > >& prAfBrec
          for(map<int,double>::iterator it_b = bank.begin(); it_b != bank.end(); it_b++) {
             if(graph_[A].leaders.find(it_b->first) != graph_[A].leaders.end() || it_b->first == A ) continue; // skip anyone I am already following or who is me
             tmp.push_back(pair<int,double>(it_b->first,it_b->second));
+            if (it_b->second > max_bank) max_bank = it_b->second;
          }
       }
       sort(tmp.begin(),tmp.end(),sort_v_p_i_d_d);
 
       int counter=0;
-      int rlast = int_min(tmp.size(),50);
-      for(vector<pair<int,double> >::iterator it_tmp = tmp.begin(); it_tmp != tmp.end() && counter < 50; it_tmp++) {
+      int rlast = int_min(tmp.size(),200);
+      //int rlast = 50;
+      for(vector<pair<int,double> >::iterator it_tmp = tmp.begin(); it_tmp != tmp.end() && counter < rlast; it_tmp++) {
          counter++;
          int id = (*it_tmp).first;
          if(isTrain) {
@@ -136,6 +139,8 @@ void xData::writeFiles (int A, map<int,map<string,pair<double,int> > >& prAfBrec
          }
          double rank = (rlast<=1) ? 1.0 : (double)(rlast-counter)/(double)(rlast-1);
          attrFile << rank << ",";
+         if(max_bank > 0) attrFile << it_tmp->second / max_bank << ",";
+         else attrFile << "0,";
          int types_count = 0;
          for(set<string>::iterator it_type = types_.begin(); it_type != types_.end(); it_type++) {
             types_count++;
@@ -716,7 +721,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       return;
    }
    //string header1="Fs,FsLs,FsFs,LsLs,LsFs,LsFsLs";
-   string header1="rank,";
+   string header1="rank,score,";
    int types_count = 0;
    for(set<string>::iterator it_h1 = types_.begin(); it_h1 != types_.end(); it_h1++) {
       types_count++;

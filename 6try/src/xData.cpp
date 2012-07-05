@@ -169,6 +169,8 @@ void xData::writeFiles (int A, map<int,map<string,pair<double,int> > >& prAfBrec
    }
 }
 
+static double GIFT_RATE = 0.7;
+
 void xData::getMissing3 (map<int,pair<double,double> >& rcvd_gift, map<int,double>& bank, int depth, int maxdepth) {
    if(depth == maxdepth) return;
    map<int,pair<double,double> > my_gift;
@@ -178,11 +180,11 @@ void xData::getMissing3 (map<int,pair<double,double> >& rcvd_gift, map<int,doubl
       double leader_gift = (it_rcvd->second).first;
       double follower_gift = (it_rcvd->second).second;
       if(depth != 0) {
-         amt_gift = (follower_gift + leader_gift / 2.0) / (double)(graph_[id].leaders.size() + graph_[id].followers.size());
-         bank[id] += leader_gift / 2.0;
+         amt_gift = (follower_gift + leader_gift * GIFT_RATE ) / (double)(graph_[id].leaders.size() + graph_[id].followers.size());
+         bank[id] += leader_gift * (1-GIFT_RATE);
       } else {
-         amt_gift = ((follower_gift / 2.0) + (leader_gift / 2.0)) / (double)(graph_[id].leaders.size() + graph_[id].followers.size());
-         bank[id] += ((follower_gift / 2.0) + (leader_gift / 2.0));
+         amt_gift = ((follower_gift * GIFT_RATE) + (leader_gift * GIFT_RATE)) / (double)(graph_[id].leaders.size() + graph_[id].followers.size());
+         bank[id] += ((follower_gift * (1-GIFT_RATE)) + (leader_gift * (1-GIFT_RATE)));
       }
 
       for(set<int>::iterator it_l = graph_[id].leaders.begin(); it_l != graph_[id].leaders.end(); it_l++) {
@@ -629,7 +631,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       }
    }
    cerr << "Predicting missing edges..." << endl;
-   if(1) {
+   if(0) {
    cerr << "   determining friends and connect back rates..." << endl;
    for(int i=0; i<graph_.size(); i++) {
       if((graph_[i].leaders.size() == 0 || graph_[i].followers.size() == 0) && 0) {
@@ -760,20 +762,22 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       }
       rfValidate << endl;
       
-      vector<int> myDepth(DEPTH,0);
-      int maxdepth = recGetDepth(id,myDepth,0);
-      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
+      //vector<int> myDepth(DEPTH,0);
+      //int maxdepth = recGetDepth(id,myDepth,0);
+      //cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
 
       //map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTrain,rfTrainEdges, true /*isTrain*/);
 
       map<int,map<string,pair<double,int> > > prAfBrecSum;
-      getMissing2(id,id,prAfBrecSum,"",0,maxdepth);
+      //getMissing2(id,id,prAfBrecSum,"",0,maxdepth);
+      getMissing2(id,id,prAfBrecSum,"",0,DEPTH);
 
       map<int,pair<double,double> > gift;  // key = id, value = first value is a leader gift, second value is a follower gift
       map<int,double> bank;
       gift[id]=pair<double,double>(0.0,1.0);
-      getMissing3(gift,bank,-1,maxdepth);
+      //getMissing3(gift,bank,-1,maxdepth);
+      getMissing3(gift,bank,-1,DEPTH);
 
       writeFiles(id,prAfBrecSum,bank,rfTrain,rfTrainEdges, true /*isTrain*/);
       
@@ -789,20 +793,22 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    for(vector<int>::iterator it = test_.begin(); it != test_.end(); it++) {
       int id = *it;
 
-      vector<int> myDepth(DEPTH,0);
-      int maxdepth = recGetDepth(id,myDepth,0);
-      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
+      //vector<int> myDepth(DEPTH,0);
+      //int maxdepth = recGetDepth(id,myDepth,0);
+      //cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
 
       //map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTest,rfTestEdges, false /*isTrain*/);
       
       map<int,map<string,pair<double,int> > > prAfBrecSum;
-      getMissing2(id,id,prAfBrecSum,"",0,maxdepth);
+      //getMissing2(id,id,prAfBrecSum,"",0,maxdepth);
+      getMissing2(id,id,prAfBrecSum,"",0,DEPTH);
       
       map<int,pair<double,double> > gift;  // key = id, value = first value is a leader gift, second value is a follower gift
       map<int,double> bank;
       gift[id]=pair<double,double>(0.0,1.0); // this initializes things by giving the source 1.0
-      getMissing3(gift,bank,-1,maxdepth);
+      //getMissing3(gift,bank,-1,maxdepth);
+      getMissing3(gift,bank,-1,DEPTH);
 
       writeFiles(id,prAfBrecSum,bank,rfTest,rfTestEdges, false /*isTrain*/);
 

@@ -73,9 +73,9 @@ bool sort_v_v_d(Voter a, Voter b) {
    return a.overlap > b.overlap;
 }
 
-const int DEPTH = 9;
+const int DEPTH = 3;
 const int DEPTH2 = 3;
-const int LIMIT = 1000;
+const int LIMIT = 100000000;
 const int LS1 = 2;
 const int LS2 = 4;
 

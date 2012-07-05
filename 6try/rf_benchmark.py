@@ -12,14 +12,14 @@ def isortr(data):
 
 def main():
     print "Reading training data..."
-    train = csv_io.read_data("workspace/step1_train.csv")
+    train = csv_io.read_data("step1_train.csv")
 
     print "Reading testing data..."
-    test = csv_io.read_data("workspace/step1_test.csv")
+    test = csv_io.read_data("step1_test.csv")
 
     target = [x[0] for x in train]
     train = [x[1:] for x in train]
-    if 1:
+    if 0:
        #indx = {0,1,4,6,7,3,5,9,11,10,2,12}  # .985
        #indx = {0,1,2,3,4,5,6,7,8,9,10,11,12,13}  # .9846
        #indx = {0,1,2,3,4,5,6,7,9,10,11,12,13}  # .9848
@@ -46,6 +46,7 @@ def main():
 
     step = 890
     maxF = int(100.0/1775.0*step)
+    maxF = 2
     indices = isortr(rf.feature_importances_)
     train = [[x[i] for i in indices[:step]] for x in train]
     test = [[x[i] for i in indices[:step]] for x in test]

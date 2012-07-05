@@ -73,19 +73,20 @@ bool sort_v_v_d(Voter a, Voter b) {
    return a.overlap > b.overlap;
 }
 
-const int DEPTH = 3;
-const int LIMIT = 20000;
+const int DEPTH = 9;
+const int DEPTH2 = 3;
+const int LIMIT = 1000;
 const int LS1 = 2;
 const int LS2 = 4;
 
 int xData::recGetDepth (int A, vector<int>& myDepth, int depth) {
-   if(depth == DEPTH || myDepth[depth] > LIMIT) return 0;
+   if(depth == DEPTH || myDepth[depth] > LIMIT) return -1;
    myDepth[depth]+=graph_[A].leaders.size() + graph_[A].followers.size();
    for(set<int>::iterator it_next = graph_[A].leaders.begin(); it_next != graph_[A].leaders.end(); it_next++) {
-         recGetDepth(*it_next, myDepth, depth+1);
+         if(recGetDepth(*it_next, myDepth, depth+1)==-1) break;
    }
    for(set<int>::iterator it_next = graph_[A].followers.begin(); it_next != graph_[A].followers.end(); it_next++) {
-         recGetDepth(*it_next, myDepth, depth+1);
+         if(recGetDepth(*it_next, myDepth, depth+1)==-1) break;
    }
    if(depth == 0) {
       int maxdepth = DEPTH;
@@ -128,7 +129,7 @@ void xData::writeFiles (int A, map<int,map<string,pair<double,int> > >& prAfBrec
       sort(tmp.begin(),tmp.end(),sort_v_p_i_d_d);
 
       int counter=0;
-      int rlast = int_min(tmp.size(),200);
+      int rlast = int_min(tmp.size(),50);
       //int rlast = 50;
       for(vector<pair<int,double> >::iterator it_tmp = tmp.begin(); it_tmp != tmp.end() && counter < rlast; it_tmp++) {
          counter++;
@@ -169,7 +170,7 @@ void xData::writeFiles (int A, map<int,map<string,pair<double,int> > >& prAfBrec
    }
 }
 
-static double GIFT_RATE = 0.7;
+static double GIFT_RATE = 0.5;
 
 void xData::getMissing3 (map<int,pair<double,double> >& rcvd_gift, map<int,double>& bank, int depth, int maxdepth) {
    if(depth == maxdepth) return;
@@ -436,7 +437,7 @@ void xData::getMissing (int id, map<int,EdgeRec>& myMissing, ofstream& attrFile,
 }
 
 void recSetType(set<string>& types, string type, int depth) {
-   if(depth == DEPTH) return;
+   if(depth == DEPTH2) return;
    string newtype = type + "L";
    types.insert(newtype);
    recSetType(types, newtype, depth+1);
@@ -631,7 +632,7 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       }
    }
    cerr << "Predicting missing edges..." << endl;
-   if(0) {
+   if(1) {
    cerr << "   determining friends and connect back rates..." << endl;
    for(int i=0; i<graph_.size(); i++) {
       if((graph_[i].leaders.size() == 0 || graph_[i].followers.size() == 0) && 0) {
@@ -762,22 +763,22 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
       }
       rfValidate << endl;
       
-      //vector<int> myDepth(DEPTH,0);
-      //int maxdepth = recGetDepth(id,myDepth,0);
-      //cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
+      vector<int> myDepth(DEPTH,0);
+      int maxdepth = recGetDepth(id,myDepth,0);
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
 
       //map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTrain,rfTrainEdges, true /*isTrain*/);
 
       map<int,map<string,pair<double,int> > > prAfBrecSum;
       //getMissing2(id,id,prAfBrecSum,"",0,maxdepth);
-      getMissing2(id,id,prAfBrecSum,"",0,DEPTH);
+      getMissing2(id,id,prAfBrecSum,"",0,int_min(DEPTH2,maxdepth));
 
       map<int,pair<double,double> > gift;  // key = id, value = first value is a leader gift, second value is a follower gift
       map<int,double> bank;
       gift[id]=pair<double,double>(0.0,1.0);
-      //getMissing3(gift,bank,-1,maxdepth);
-      getMissing3(gift,bank,-1,DEPTH);
+      getMissing3(gift,bank,-1,maxdepth);
+      //getMissing3(gift,bank,-1,DEPTH);
 
       writeFiles(id,prAfBrecSum,bank,rfTrain,rfTrainEdges, true /*isTrain*/);
       
@@ -793,22 +794,22 @@ xData::xData(char* trainFile, char* testFile, int seed, int limit_train, int lim
    for(vector<int>::iterator it = test_.begin(); it != test_.end(); it++) {
       int id = *it;
 
-      //vector<int> myDepth(DEPTH,0);
-      //int maxdepth = recGetDepth(id,myDepth,0);
-      //cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
+      vector<int> myDepth(DEPTH,0);
+      int maxdepth = recGetDepth(id,myDepth,0);
+      cerr << id << " (" << maxdepth << ") : " << myDepth[0] << "," << myDepth[1] << "," << myDepth[2] << "," << myDepth[3] << "," << myDepth[4] << endl;
 
       //map<int,EdgeRec> myMissing;
       //getMissing(id,myMissing,rfTest,rfTestEdges, false /*isTrain*/);
       
       map<int,map<string,pair<double,int> > > prAfBrecSum;
       //getMissing2(id,id,prAfBrecSum,"",0,maxdepth);
-      getMissing2(id,id,prAfBrecSum,"",0,DEPTH);
+      getMissing2(id,id,prAfBrecSum,"",0,int_min(DEPTH2,maxdepth));
       
       map<int,pair<double,double> > gift;  // key = id, value = first value is a leader gift, second value is a follower gift
       map<int,double> bank;
       gift[id]=pair<double,double>(0.0,1.0); // this initializes things by giving the source 1.0
-      //getMissing3(gift,bank,-1,maxdepth);
-      getMissing3(gift,bank,-1,DEPTH);
+      getMissing3(gift,bank,-1,maxdepth);
+      //getMissing3(gift,bank,-1,DEPTH);
 
       writeFiles(id,prAfBrecSum,bank,rfTest,rfTestEdges, false /*isTrain*/);
 

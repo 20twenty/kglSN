@@ -48,8 +48,8 @@ workspace/xform_predict: bin/xform
 
 workspace/xform_test: bin/xform
 	rm -f workspace/*
-	$(foreach var,$(GROUPS),(bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) $(TEST_SAMPLE) 1 $(var) $(LAST_GROUP) > log_s1_$(var)_$(LAST_GROUP) &);)
-	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) $(TEST_SAMPLE) 1 1 $(LAST_GROUP)
+	$(foreach var,$(GROUPS),(bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) $(TEST_SAMPLE) 10 $(var) $(LAST_GROUP) > log_s1_$(var)_$(LAST_GROUP) &);)
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) $(TEST_SAMPLE) 10 1 $(LAST_GROUP)
 	./step1_merge.sh
 	rm -f workspace/step1_*_?_$(LAST_GROUP).csv
 	rm -f workspace/header*

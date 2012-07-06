@@ -13,6 +13,10 @@ NUMBERS = 3 4 5 6 7 8 9
 #NUMBERS = 3 4 5 6 7 8 9 10 11
 #NUMBERS = 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
 
+GROUPS = 2 3 4 5 6 7 8
+LAST_GROUP=8
+TEST_SAMPLE=1000
+
 test: exe xform_test rf sleep_test score
 predict: exe xform_predict rf sleep_predict score
 
@@ -43,7 +47,12 @@ workspace/xform_predict: bin/xform
 	touch workspace/xform_predict
 
 workspace/xform_test: bin/xform
-	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 1000 10
+	rm -f workspace/*
+	$(foreach var,$(GROUPS),(bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) $(TEST_SAMPLE) 1 $(var) $(LAST_GROUP) > log_s1_$(var)_$(LAST_GROUP) &);)
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) $(TEST_SAMPLE) 1 1 $(LAST_GROUP)
+	./step1_merge.sh
+	rm -f workspace/step1_*_?_$(LAST_GROUP).csv
+	rm -f workspace/header*
 	rm -f workspace/rf
 	touch workspace/xform_test
 

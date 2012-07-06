@@ -10,6 +10,10 @@ SEED=31120011
 SUBF = 1
 #NUMBERS = 3 4
 NUMBERS = 3 4 5 6 7 8 9
+NUMBERSA = 13 14 15 16 17 18 19
+NUMBERSB = 23 24 25 26 27 28 29
+NUMBERSC = 33 34 35 36 37 38 39
+NUMBERSD = 43 44 45 46 47 48 49
 #NUMBERS = 3 4 5 6 7 8 9 10 11
 #NUMBERS = 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
 
@@ -65,10 +69,21 @@ workspace/xform_test: bin/xform
 	touch workspace/xform_test
 
 workspace/rf: bin/rf
-	rm -f workspace/oob_predict_*_1_$(MTRY)_$(TREES)
-	rm -f workspace/tst_predict_*_1_$(MTRY)_$(TREES)
-	$(foreach var,$(NUMBERS),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
-	./bin/rf 2 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_2_1_$(MTRY)_$(TREES)
+	#rm -f workspace/oob_predict_*_1_$(MTRY)_$(TREES)
+	#rm -f workspace/tst_predict_*_1_$(MTRY)_$(TREES)
+	#$(foreach var,$(NUMBERS),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
+	#./bin/rf 2 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_2_1_$(MTRY)_$(TREES)
+	$(foreach var,$(NUMBERSA),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
+	./bin/rf 12 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_12_1_$(MTRY)_$(TREES)
+	sleep 300
+	$(foreach var,$(NUMBERSB),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
+	./bin/rf 22 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_22_1_$(MTRY)_$(TREES)
+	sleep 300
+	$(foreach var,$(NUMBERSC),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
+	./bin/rf 32 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_32_1_$(MTRY)_$(TREES)
+	sleep 300
+	$(foreach var,$(NUMBERSD),(./bin/rf $(var) 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_$(var)_1_$(MTRY)_$(TREES) &);)
+	./bin/rf 42 1 $(MTRY) $(TREES) workspace/step1_train.csv workspace/step1_test.csv $(SUBF) > log_42_1_$(MTRY)_$(TREES)
 	rm -f workspace/score
 	touch workspace/rf
 

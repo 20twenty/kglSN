@@ -3,8 +3,8 @@ CFLAGS=-c
 LDFLAGS=
 MTRY=2
 #TREES=63
-TREES=125
-#TREES=200
+#TREES=125
+TREES=200
 #TREES=333
 SEED=31120011
 SUBF = 1
@@ -37,10 +37,18 @@ bin/rf: rf_src/rf.cpp rf_src/xData.cpp rf_src/xData.h rf_src/randomforest.cpp rf
 	$(CC) -I./rf_src rf_src/rf.cpp rf_src/xData.cpp rf_src/randomforest.cpp -o bin/rf
 
 workspace/xform_predict: bin/xform
-	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 0 0
+	rm -f workspace/*
+	$(foreach var,$(GROUPS),(bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 0 0 $(var) $(LAST_GROUP) > log_s1_$(var)_$(LAST_GROUP) &);)
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 0 0 1 $(LAST_GROUP)
+	./step1_merge.sh
 	mv workspace/step1_test.csv .
 	mv workspace/step1_test_edges.csv .
-	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 20000 5
+	rm -f workspace/*
+	$(foreach var,$(GROUPS),(bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 20000 5 $(var) $(LAST_GROUP) > log_s1_$(var)_$(LAST_GROUP) &);)
+	bin/xform ../../kglSN_data/train.csv ../../kglSN_data/test.csv $(SEED) 20000 5 1 $(LAST_GROUP)
+	./step1_merge.sh
+	rm -f workspace/step1_*_?_$(LAST_GROUP).csv
+	rm -f workspace/header*
 	mv step1_test.csv workspace/
 	mv step1_test_edges.csv workspace/
 	rm -f workspace/rf

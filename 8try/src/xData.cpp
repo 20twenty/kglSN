@@ -129,7 +129,7 @@ void xData::writeFiles (int A, map<int,map<string,pair<double,int> > >& prAfBrec
       sort(tmp.begin(),tmp.end(),sort_v_p_i_d_d);
 
       int counter=0;
-      int rlast = int_min(tmp.size(),200);
+      int rlast = int_min(tmp.size(),100);
       //int rlast = 50;
       for(vector<pair<int,double> >::iterator it_tmp = tmp.begin(); it_tmp != tmp.end() && counter < rlast; it_tmp++) {
          counter++;
